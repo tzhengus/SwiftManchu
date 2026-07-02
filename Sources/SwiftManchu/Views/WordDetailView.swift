@@ -16,8 +16,9 @@ struct WordDetailView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                LabeledContent("中文", value: word.chinese)
-                LabeledContent("English", value: word.english)
+                DictionaryField(title: "Manchu", value: word.manchu)
+                DictionaryField(title: "中文", value: word.chinese)
+                DictionaryField(title: "English", value: word.english)
 
                 if !sentences.isEmpty {
                     Divider()
@@ -40,5 +41,28 @@ struct WordDetailView: View {
             .frame(maxWidth: 760, alignment: .leading)
         }
         .navigationTitle(word.manchu)
+    }
+}
+
+private struct DictionaryField: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        LabeledContent {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(value)
+                    .textSelection(.enabled)
+                Button {
+                    Clipboard.copy(value)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.borderless)
+                .help("Copy")
+            }
+        } label: {
+            Text(title)
+        }
     }
 }
