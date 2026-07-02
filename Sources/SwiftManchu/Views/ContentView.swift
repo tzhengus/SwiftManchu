@@ -6,22 +6,26 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(model.filteredWords, selection: $model.selectedWordID) { word in
-                WordRow(word: word, sentenceMatch: model.sentenceMatch(for: word), isFavorite: model.isFavorite(word))
-                    .tag(word.id)
-                    .onTapGesture {
-                        model.select(word)
+            VStack(spacing: 0) {
+                Picker("List", selection: $model.listFilter) {
+                    ForEach(DictionaryModel.ListFilter.allCases) { filter in
+                        Text(filter.rawValue).tag(filter)
                     }
+                }
+                .pickerStyle(.segmented)
+                .padding([.horizontal, .top], 12)
+                .padding(.bottom, 8)
+
+                List(model.filteredWords, selection: $model.selectedWordID) { word in
+                    WordRow(word: word, sentenceMatch: model.sentenceMatch(for: word), isFavorite: model.isFavorite(word))
+                        .tag(word.id)
+                        .onTapGesture {
+                            model.select(word)
+                        }
+                }
             }
             .navigationTitle("SwiftManchu")
             .searchable(text: $model.searchText, prompt: "Search words or examples")
-            .toolbar {
-                Button {
-                    model.showFavoritesOnly.toggle()
-                } label: {
-                    Label("Favorites", systemImage: model.showFavoritesOnly ? "star.fill" : "star")
-                }
-            }
             .overlay {
                 if model.words.isEmpty && model.errorMessage == nil {
                     ProgressView()
