@@ -11,18 +11,26 @@ final class DictionaryModel {
 
     private var store: DictionaryStore?
     private var allSentences: [Sentence] = []
+    private let favoritesKey = "favoriteWordIDs"
 
     var selectedWordID: Word.ID?
     var searchText = ""
+    var showFavoritesOnly = false
+    private(set) var favoriteWordIDs: Set<Word.ID>
+
+    init() {
+        favoriteWordIDs = Set(UserDefaults.standard.array(forKey: favoritesKey) as? [Int] ?? [])
+    }
 
     var filteredWords: [Word] {
-        let wordMatches = DictionarySearch.rankedWords(words, query: searchText)
+        let candidates = showFavoritesOnly ? words.filter { favoriteWordIDs.contains($0.id) } : words
+        let wordMatches = DictionarySearch.rankedWords(candidates, query: searchText)
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return wordMatches }
 
         let matchedIDs = Set(sentenceMatches.map(\.wordID))
         let wordMatchIDs = Set(wordMatches.map(\.id))
-        let sentenceOnlyMatches = words.filter {
+        let sentenceOnlyMatches = candidates.filter {
             matchedIDs.contains($0.id) && !wordMatchIDs.contains($0.id)
         }
         return wordMatches + sentenceOnlyMatches
@@ -74,6 +82,19 @@ final class DictionaryModel {
 
     func sentenceMatch(for word: Word) -> Sentence? {
         sentenceMatches.first { $0.wordID == word.id }
+    }
+
+    func isFavorite(_ word: Word) -> Bool {
+        favoriteWordIDs.contains(word.id)
+    }
+
+    func toggleFavorite(_ word: Word) {
+        if favoriteWordIDs.contains(word.id) {
+            favoriteWordIDs.remove(word.id)
+        } else {
+            favoriteWordIDs.insert(word.id)
+        }
+        UserDefaults.standard.set(Array(favoriteWordIDs).sorted(), forKey: favoritesKey)
     }
 
     private func loadSentences(for wordID: Int) throws {
