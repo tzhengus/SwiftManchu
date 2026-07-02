@@ -15,13 +15,7 @@ final class DictionaryModel {
     var searchText = ""
 
     var filteredWords: [Word] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return words }
-        return words.filter {
-            $0.manchu.localizedCaseInsensitiveContains(query)
-                || $0.chinese.localizedCaseInsensitiveContains(query)
-                || $0.english.localizedCaseInsensitiveContains(query)
-        }
+        DictionarySearch.rankedWords(words, query: searchText)
     }
 
     var selectedWord: Word? {
