@@ -5,6 +5,13 @@ import SwiftManchuCore
 @MainActor
 @Observable
 final class DictionaryModel {
+    struct WordSearchResult: Identifiable {
+        let word: Word
+        let sentenceMatch: Sentence?
+
+        var id: Word.ID { word.id }
+    }
+
     enum ListFilter: String, CaseIterable, Identifiable {
         case all = "All"
         case favorites = "Favorites"
@@ -33,33 +40,28 @@ final class DictionaryModel {
         recentWordIDs = UserDefaults.standard.array(forKey: recentKey) as? [Int] ?? []
     }
 
-    var filteredWords: [Word] {
+    var filteredResults: [WordSearchResult] {
         let candidates = filteredCandidates
         let wordMatches = DictionarySearch.rankedWords(candidates, query: searchText)
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return wordMatches }
+        guard !query.isEmpty else {
+            return wordMatches.map { WordSearchResult(word: $0, sentenceMatch: nil) }
+        }
 
-        let matchedIDs = Set(sentenceMatches.map(\.wordID))
+        let sentenceMatches = DictionarySearch.matchingSentences(allSentences, query: query)
+        var firstSentenceByWordID: [Word.ID: Sentence] = [:]
+        for sentence in sentenceMatches where firstSentenceByWordID[sentence.wordID] == nil {
+            firstSentenceByWordID[sentence.wordID] = sentence
+        }
+
+        let matchedIDs = Set(firstSentenceByWordID.keys)
         let wordMatchIDs = Set(wordMatches.map(\.id))
         let sentenceOnlyMatches = candidates.filter {
             matchedIDs.contains($0.id) && !wordMatchIDs.contains($0.id)
         }
-        return wordMatches + sentenceOnlyMatches
-    }
-
-    private var filteredCandidates: [Word] {
-        switch listFilter {
-        case .all:
-            words
-        case .favorites:
-            words.filter { favoriteWordIDs.contains($0.id) }
-        case .recent:
-            recentWordIDs.compactMap { id in words.first { $0.id == id } }
+        return (wordMatches + sentenceOnlyMatches).map {
+            WordSearchResult(word: $0, sentenceMatch: firstSentenceByWordID[$0.id])
         }
-    }
-
-    var sentenceMatches: [Sentence] {
-        DictionarySearch.matchingSentences(allSentences, query: searchText)
     }
 
     var selectedWord: Word? {
@@ -103,10 +105,6 @@ final class DictionaryModel {
         errorMessage = nil
     }
 
-    func sentenceMatch(for word: Word) -> Sentence? {
-        sentenceMatches.first { $0.wordID == word.id }
-    }
-
     func isFavorite(_ word: Word) -> Bool {
         favoriteWordIDs.contains(word.id)
     }
@@ -125,6 +123,17 @@ final class DictionaryModel {
         recentWordIDs.insert(word.id, at: 0)
         recentWordIDs = Array(recentWordIDs.prefix(20))
         UserDefaults.standard.set(recentWordIDs, forKey: recentKey)
+    }
+
+    private var filteredCandidates: [Word] {
+        switch listFilter {
+        case .all:
+            words
+        case .favorites:
+            words.filter { favoriteWordIDs.contains($0.id) }
+        case .recent:
+            recentWordIDs.compactMap { id in words.first { $0.id == id } }
+        }
     }
 
     private func loadSentences(for wordID: Int) throws {

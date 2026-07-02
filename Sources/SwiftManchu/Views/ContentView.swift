@@ -16,11 +16,11 @@ struct ContentView: View {
                 .padding([.horizontal, .top], 12)
                 .padding(.bottom, 8)
 
-                List(model.filteredWords, selection: $model.selectedWordID) { word in
-                    WordRow(word: word, sentenceMatch: model.sentenceMatch(for: word), isFavorite: model.isFavorite(word))
-                        .tag(word.id)
+                List(model.filteredResults, selection: $model.selectedWordID) { result in
+                    WordRow(word: result.word, sentenceMatch: result.sentenceMatch, isFavorite: model.isFavorite(result.word))
+                        .tag(result.word.id)
                         .onTapGesture {
-                            model.select(word)
+                            model.select(result.word)
                         }
                 }
             }
@@ -29,7 +29,7 @@ struct ContentView: View {
             .overlay {
                 if model.words.isEmpty && model.errorMessage == nil {
                     ProgressView()
-                } else if model.filteredWords.isEmpty {
+                } else if model.filteredResults.isEmpty {
                     ContentUnavailableView("No Matches", systemImage: "magnifyingglass")
                 }
             }
