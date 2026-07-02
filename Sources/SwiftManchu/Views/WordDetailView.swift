@@ -4,17 +4,18 @@ import SwiftUI
 struct WordDetailView: View {
     let word: Word
     let sentences: [Sentence]
+    let wordsByManchu: [String: Word]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                HeaderSection(word: word)
+                HeaderSection(word: word, wordsByManchu: wordsByManchu)
                 ManchuScriptPanel(romanized: word.manchu)
                 PronunciationSection(romanized: word.manchu)
                 DefinitionSection(word: word)
 
                 if !sentences.isEmpty {
-                    ExampleSection(sentences: sentences)
+                    ExampleSection(sentences: sentences, wordsByManchu: wordsByManchu)
                 }
             }
             .padding(.horizontal, 40)
@@ -28,12 +29,11 @@ struct WordDetailView: View {
 
 private struct HeaderSection: View {
     let word: Word
+    let wordsByManchu: [String: Word]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(word.manchu)
-                .font(.system(size: 48, weight: .semibold))
-                .textSelection(.enabled)
+            GlossedManchuText(text: word.manchu, wordsByManchu: wordsByManchu, font: .system(size: 48, weight: .semibold))
 
             if !word.attribute.isEmpty {
                 Text(word.attribute)
@@ -144,6 +144,7 @@ private struct PronunciationSection: View {
 
 private struct ExampleSection: View {
     let sentences: [Sentence]
+    let wordsByManchu: [String: Word]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -154,9 +155,7 @@ private struct ExampleSection: View {
 
             ForEach(sentences) { sentence in
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(sentence.manchu)
-                        .font(.headline)
-                        .textSelection(.enabled)
+                    GlossedManchuText(text: sentence.manchu, wordsByManchu: wordsByManchu, font: .headline)
                     Text(sentence.chinese)
                         .textSelection(.enabled)
                     if !sentence.english.isEmpty {
@@ -167,6 +166,45 @@ private struct ExampleSection: View {
                 }
                 .padding(.vertical, 2)
             }
+        }
+    }
+}
+
+private struct GlossedManchuText: View {
+    let text: String
+    let wordsByManchu: [String: Word]
+    let font: Font
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(Array(text.split(separator: " ").enumerated()), id: \.offset) { _, token in
+                let value = String(token)
+                let word = wordsByManchu[value.normalizedManchuKey]
+                GlossedToken(value: value, word: word, font: font, tooltip: word.map(tooltip(for:)))
+            }
+        }
+    }
+
+    private func tooltip(for word: Word) -> String {
+        [word.chinese, word.english].filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+}
+
+private struct GlossedToken: View {
+    let value: String
+    let word: Word?
+    let font: Font
+    let tooltip: String?
+
+    var body: some View {
+        let text = Text(value)
+            .font(font)
+            .textSelection(.enabled)
+
+        if let tooltip {
+            text.help(tooltip)
+        } else {
+            text
         }
     }
 }
@@ -195,5 +233,11 @@ private struct DictionaryField: View {
 
             Spacer(minLength: 0)
         }
+    }
+}
+
+private extension String {
+    var normalizedManchuKey: String {
+        trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
     }
 }

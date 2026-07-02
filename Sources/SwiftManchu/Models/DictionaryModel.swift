@@ -68,6 +68,14 @@ final class DictionaryModel {
         words.first { $0.id == selectedWordID } ?? words.first
     }
 
+    var wordsByManchu: [String: Word] {
+        var result: [String: Word] = [:]
+        for word in words where result[word.manchu.normalizedManchuKey] == nil {
+            result[word.manchu.normalizedManchuKey] = word
+        }
+        return result
+    }
+
     func load() async {
         guard let url = DictionaryResource.databaseURL else {
             errorMessage = "Bundled dictionary database is missing."
@@ -139,5 +147,11 @@ final class DictionaryModel {
     private func loadSentences(for wordID: Int) throws {
         guard sentences[wordID] == nil else { return }
         sentences[wordID] = try store?.sentences(for: wordID) ?? []
+    }
+}
+
+private extension String {
+    var normalizedManchuKey: String {
+        trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)).lowercased()
     }
 }

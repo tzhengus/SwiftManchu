@@ -35,7 +35,7 @@ struct ContentView: View {
             }
         } detail: {
             if let word = model.selectedWord {
-                WordDetailView(word: word, sentences: model.sentences[word.id] ?? [])
+                WordDetailView(word: word, sentences: model.sentences[word.id] ?? [], wordsByManchu: model.wordsByManchu)
                     .task(id: word.id) {
                         model.select(word)
                     }
