@@ -38,3 +38,9 @@ import Testing
     #expect(ManchuTransliterator.script(from: "akū") == "\u{1820}\u{182C}\u{1826}")
     #expect(ManchuTransliterator.script(from: "aš") == "\u{1820}\u{1831}")
 }
+
+@Test func manchuPronunciationShowsSyllablesAndApproximateIPA() {
+    #expect(ManchuPronunciation.syllableBreakdown("abkai buten") == "ab-kai bu-ten")
+    #expect(ManchuPronunciation.syllableBreakdown("inenggi") == "i-neng-gi")
+    #expect(ManchuPronunciation.approximateIPA("abka") == "/ap.qʰa/")
+}

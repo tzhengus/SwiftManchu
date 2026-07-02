@@ -10,6 +10,7 @@ struct WordDetailView: View {
             VStack(alignment: .leading, spacing: 28) {
                 HeaderSection(word: word)
                 ManchuScriptPanel(romanized: word.manchu)
+                PronunciationSection(romanized: word.manchu)
                 DefinitionSection(word: word)
 
                 if !sentences.isEmpty {
@@ -119,6 +120,24 @@ private struct DefinitionSection: View {
             if !word.english.isEmpty {
                 DictionaryField(title: "English", value: word.english)
             }
+        }
+    }
+}
+
+private struct PronunciationSection: View {
+    let romanized: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Pronunciation")
+                .font(.title3.weight(.semibold))
+
+            DictionaryField(title: "Syllables", value: ManchuPronunciation.syllableBreakdown(romanized))
+            DictionaryField(title: "Approx. IPA", value: ManchuPronunciation.approximateIPA(romanized))
+
+            Text("Rule-based approximation from the transliteration; not a recorded native pronunciation.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 }
