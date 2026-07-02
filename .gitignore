@@ -24,3 +24,9 @@ DerivedData
 # http://guides.cocoapods.org/using/using-cocoapods.html#should-i-ignore-the-pods-directory-in-source-control
 #
 # Pods/
+
+# SwiftPM / local app bundle
+.build/
+.build-module-cache/
+.swiftpm/
+dist/
