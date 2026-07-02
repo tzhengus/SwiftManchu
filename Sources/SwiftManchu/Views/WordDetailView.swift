@@ -5,17 +5,18 @@ struct WordDetailView: View {
     let word: Word
     let sentences: [Sentence]
     let wordsByManchu: [String: Word]
+    let onOpenWord: (Word) -> Void
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                HeaderSection(word: word, wordsByManchu: wordsByManchu)
+                HeaderSection(word: word, wordsByManchu: wordsByManchu, onOpenWord: onOpenWord)
                 ManchuScriptPanel(romanized: word.manchu)
                 PronunciationSection(romanized: word.manchu)
                 DefinitionSection(word: word)
 
                 if !sentences.isEmpty {
-                    ExampleSection(sentences: sentences, wordsByManchu: wordsByManchu)
+                    ExampleSection(sentences: sentences, wordsByManchu: wordsByManchu, onOpenWord: onOpenWord)
                 }
             }
             .padding(.horizontal, 40)
@@ -30,10 +31,11 @@ struct WordDetailView: View {
 private struct HeaderSection: View {
     let word: Word
     let wordsByManchu: [String: Word]
+    let onOpenWord: (Word) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GlossedManchuText(text: word.manchu, wordsByManchu: wordsByManchu, font: .system(size: 48, weight: .semibold))
+            GlossedManchuText(text: word.manchu, wordsByManchu: wordsByManchu, font: .system(size: 48, weight: .semibold), onOpenWord: onOpenWord)
 
             if !word.attribute.isEmpty {
                 Text(word.attribute)
@@ -145,6 +147,7 @@ private struct PronunciationSection: View {
 private struct ExampleSection: View {
     let sentences: [Sentence]
     let wordsByManchu: [String: Word]
+    let onOpenWord: (Word) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -155,7 +158,7 @@ private struct ExampleSection: View {
 
             ForEach(sentences) { sentence in
                 VStack(alignment: .leading, spacing: 7) {
-                    GlossedManchuText(text: sentence.manchu, wordsByManchu: wordsByManchu, font: .headline)
+                    GlossedManchuText(text: sentence.manchu, wordsByManchu: wordsByManchu, font: .headline, onOpenWord: onOpenWord)
                     Text(sentence.chinese)
                         .textSelection(.enabled)
                     if !sentence.english.isEmpty {
@@ -174,13 +177,14 @@ private struct GlossedManchuText: View {
     let text: String
     let wordsByManchu: [String: Word]
     let font: Font
+    let onOpenWord: (Word) -> Void
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 2) {
             ForEach(Array(text.split(separator: " ").enumerated()), id: \.offset) { _, token in
                 let value = String(token)
                 let word = lookup(value)
-                GlossedToken(value: value, word: word, font: font, tooltip: word.map(tooltip(for:)))
+                GlossedToken(value: value, word: word, font: font, tooltip: word.map(tooltip(for:)), onOpenWord: onOpenWord)
             }
         }
     }
@@ -206,25 +210,31 @@ private struct GlossedToken: View {
     let word: Word?
     let font: Font
     let tooltip: String?
+    let onOpenWord: (Word) -> Void
     @State private var isHovering = false
 
     var body: some View {
-        if let tooltip {
-            Text(value)
-                .font(font)
-                .textSelection(.enabled)
-                .padding(.horizontal, 3)
-                .padding(.vertical, 1)
-                .background(isHovering ? Color.accentColor.opacity(0.18) : Color.clear, in: RoundedRectangle(cornerRadius: 4))
-                .overlay(alignment: .topLeading) {
-                    if isHovering {
-                        GlossTooltip(word: word, tooltip: tooltip)
-                            .offset(y: -58)
-                            .zIndex(10)
-                    }
+        if let word, let tooltip {
+            Button {
+                onOpenWord(word)
+            } label: {
+                Text(value)
+                    .font(font)
+                    .textSelection(.enabled)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 1)
+            .padding(.vertical, 1)
+            .background(isHovering ? Color.accentColor.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: 3))
+            .overlay(alignment: .topLeading) {
+                if isHovering {
+                    GlossTooltip(word: word, tooltip: tooltip)
+                        .offset(y: -58)
+                        .zIndex(10)
                 }
-                .onHover { isHovering = $0 }
-                .help(tooltip)
+            }
+            .onHover { isHovering = $0 }
+            .help(tooltip)
         } else {
             Text(value)
                 .font(font)

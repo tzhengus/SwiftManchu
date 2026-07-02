@@ -34,6 +34,7 @@ final class DictionaryModel {
     var listFilter: ListFilter = .all
     private(set) var favoriteWordIDs: Set<Word.ID>
     private(set) var recentWordIDs: [Word.ID]
+    private var detailBackStack: [Word.ID] = []
 
     init() {
         favoriteWordIDs = Set(UserDefaults.standard.array(forKey: favoritesKey) as? [Int] ?? [])
@@ -100,6 +101,26 @@ final class DictionaryModel {
     }
 
     func select(_ word: Word) {
+        select(word, recordsBackNavigation: false)
+    }
+
+    func openGloss(_ word: Word) {
+        select(word, recordsBackNavigation: true)
+    }
+
+    var canGoBack: Bool {
+        !detailBackStack.isEmpty
+    }
+
+    func goBack() {
+        guard let id = detailBackStack.popLast(), let word = words.first(where: { $0.id == id }) else { return }
+        select(word, recordsBackNavigation: false)
+    }
+
+    private func select(_ word: Word, recordsBackNavigation: Bool) {
+        if recordsBackNavigation, let selectedWordID, selectedWordID != word.id {
+            detailBackStack.append(selectedWordID)
+        }
         selectedWordID = word.id
         recordRecent(word)
         do {

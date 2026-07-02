@@ -35,11 +35,23 @@ struct ContentView: View {
             }
         } detail: {
             if let word = model.selectedWord {
-                WordDetailView(word: word, sentences: model.sentences[word.id] ?? [], wordsByManchu: model.wordsByManchu)
+                WordDetailView(
+                    word: word,
+                    sentences: model.sentences[word.id] ?? [],
+                    wordsByManchu: model.wordsByManchu,
+                    onOpenWord: { model.openGloss($0) }
+                )
                     .task(id: word.id) {
                         model.select(word)
                     }
                     .toolbar {
+                        Button {
+                            model.goBack()
+                        } label: {
+                            Label("Back", systemImage: "chevron.left")
+                        }
+                        .disabled(!model.canGoBack)
+
                         Button {
                             model.toggleFavorite(word)
                         } label: {
