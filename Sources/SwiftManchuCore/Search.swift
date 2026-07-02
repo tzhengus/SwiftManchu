@@ -17,6 +17,17 @@ public enum DictionarySearch {
             .map(\.0)
     }
 
+    public static func matchingSentences(_ sentences: [Sentence], query: String) -> [Sentence] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        return sentences.filter {
+            $0.manchu.localizedCaseInsensitiveContains(trimmed)
+                || $0.chinese.localizedCaseInsensitiveContains(trimmed)
+                || $0.english.localizedCaseInsensitiveContains(trimmed)
+        }
+    }
+
     private static func rank(_ word: Word, query: String) -> Int? {
         if word.manchu.localizedCaseInsensitiveCompare(query) == .orderedSame { return 100 }
         if word.chinese.localizedCaseInsensitiveCompare(query) == .orderedSame { return 90 }

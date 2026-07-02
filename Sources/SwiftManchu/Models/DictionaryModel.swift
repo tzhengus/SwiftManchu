@@ -10,12 +10,26 @@ final class DictionaryModel {
     private(set) var errorMessage: String?
 
     private var store: DictionaryStore?
+    private var allSentences: [Sentence] = []
 
     var selectedWordID: Word.ID?
     var searchText = ""
 
     var filteredWords: [Word] {
-        DictionarySearch.rankedWords(words, query: searchText)
+        let wordMatches = DictionarySearch.rankedWords(words, query: searchText)
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return wordMatches }
+
+        let matchedIDs = Set(sentenceMatches.map(\.wordID))
+        let wordMatchIDs = Set(wordMatches.map(\.id))
+        let sentenceOnlyMatches = words.filter {
+            matchedIDs.contains($0.id) && !wordMatchIDs.contains($0.id)
+        }
+        return wordMatches + sentenceOnlyMatches
+    }
+
+    var sentenceMatches: [Sentence] {
+        DictionarySearch.matchingSentences(allSentences, query: searchText)
     }
 
     var selectedWord: Word? {
@@ -31,8 +45,10 @@ final class DictionaryModel {
         do {
             let store = try DictionaryStore(databaseURL: url)
             let loadedWords = try store.words()
+            let loadedSentences = try store.allSentences()
             self.store = store
             words = loadedWords
+            allSentences = loadedSentences
             selectedWordID = selectedWordID ?? loadedWords.first?.id
             errorMessage = nil
             if let selectedWordID {
@@ -54,6 +70,10 @@ final class DictionaryModel {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    func sentenceMatch(for word: Word) -> Sentence? {
+        sentenceMatches.first { $0.wordID == word.id }
     }
 
     private func loadSentences(for wordID: Int) throws {

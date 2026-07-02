@@ -7,14 +7,14 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             List(model.filteredWords, selection: $model.selectedWordID) { word in
-                WordRow(word: word)
+                WordRow(word: word, sentenceMatch: model.sentenceMatch(for: word))
                     .tag(word.id)
                     .onTapGesture {
                         model.select(word)
                     }
             }
             .navigationTitle("SwiftManchu")
-            .searchable(text: $model.searchText, prompt: "Search Manchu, Chinese, or English")
+            .searchable(text: $model.searchText, prompt: "Search words or examples")
             .overlay {
                 if model.words.isEmpty && model.errorMessage == nil {
                     ProgressView()
@@ -49,6 +49,7 @@ struct ContentView: View {
 
 private struct WordRow: View {
     let word: Word
+    let sentenceMatch: Sentence?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -57,6 +58,12 @@ private struct WordRow: View {
             Text(word.chinese)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+            if let sentenceMatch {
+                Text(sentenceMatch.english)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
         }
         .padding(.vertical, 3)
     }

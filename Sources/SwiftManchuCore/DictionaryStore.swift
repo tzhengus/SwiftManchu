@@ -61,6 +61,29 @@ public final class DictionaryStore: @unchecked Sendable {
         }
     }
 
+    public func allSentences() throws -> [Sentence] {
+        try withStatement(
+            sql: """
+            select sentid, sentmnc, sentchn, senteng, wordid
+            from Sentence
+            order by sentid
+            """,
+            bindings: []
+        ) { statement in
+            var result: [Sentence] = []
+            while sqlite3_step(statement) == SQLITE_ROW {
+                result.append(Sentence(
+                    id: Int(sqlite3_column_int(statement, 0)),
+                    manchu: text(statement, 1),
+                    chinese: text(statement, 2),
+                    english: text(statement, 3),
+                    wordID: Int(sqlite3_column_int(statement, 4))
+                ))
+            }
+            return result
+        }
+    }
+
     private func fetchWords(sql: String, bindings: [String]) throws -> [Word] {
         try withStatement(sql: sql, bindings: bindings) { statement in
             var result: [Word] = []

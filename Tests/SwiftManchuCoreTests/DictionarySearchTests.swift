@@ -22,3 +22,12 @@ import Testing
 
     #expect(DictionarySearch.rankedWords(words, query: "a").map(\.id) == [3, 2, 1])
 }
+
+@Test func sentenceSearchMatchesExampleText() {
+    let sentences = [
+        Sentence(id: 1, manchu: "mini", chinese: "小", english: "small", wordID: 1),
+        Sentence(id: 2, manchu: "amba", chinese: "大", english: "large", wordID: 2),
+    ]
+
+    #expect(DictionarySearch.matchingSentences(sentences, query: "LARGE").map(\.wordID) == [2])
+}
