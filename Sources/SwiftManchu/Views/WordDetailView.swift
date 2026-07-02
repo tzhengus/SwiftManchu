@@ -13,7 +13,7 @@ struct WordDetailView: View {
                 HeaderSection(word: word, wordsByManchu: wordsByManchu, onOpenWord: onOpenWord)
                 ManchuScriptPanel(romanized: word.manchu)
                 PronunciationSection(romanized: word.manchu)
-                DefinitionSection(word: word)
+                DefinitionSection(word: word, wordsByManchu: wordsByManchu, onOpenWord: onOpenWord)
 
                 if !sentences.isEmpty {
                     ExampleSection(sentences: sentences, wordsByManchu: wordsByManchu, onOpenWord: onOpenWord)
@@ -114,10 +114,14 @@ private struct VerticalManchuColumn: View {
 
 private struct DefinitionSection: View {
     let word: Word
+    let wordsByManchu: [String: Word]
+    let onOpenWord: (Word) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            DictionaryField(title: "Transliteration", value: word.manchu)
+            DictionaryRow(title: "Transliteration") {
+                GlossedManchuText(text: word.manchu, wordsByManchu: wordsByManchu, font: .body, onOpenWord: onOpenWord)
+            }
             DictionaryField(title: "中文", value: word.chinese)
             if !word.english.isEmpty {
                 DictionaryField(title: "English", value: word.english)
@@ -271,12 +275,7 @@ private struct DictionaryField: View {
     let value: String
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(title)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 118, alignment: .leading)
-
+        DictionaryRow(title: title) {
             Text(value)
                 .textSelection(.enabled)
 
@@ -287,6 +286,22 @@ private struct DictionaryField: View {
             }
             .buttonStyle(.borderless)
             .help("Copy")
+        }
+    }
+}
+
+private struct DictionaryRow<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(title)
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 118, alignment: .leading)
+
+            content
 
             Spacer(minLength: 0)
         }
