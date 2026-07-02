@@ -8,12 +8,18 @@ struct WordDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(word.manchu)
-                        .font(.largeTitle.weight(.semibold))
-                    Text(word.attribute)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(word.manchu)
+                            .font(.largeTitle.weight(.semibold))
+                        Text(word.attribute)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer(minLength: 16)
+
+                    ManchuScriptCard(romanized: word.manchu)
                 }
 
                 DictionaryField(title: "Manchu", value: word.manchu)
@@ -41,6 +47,35 @@ struct WordDetailView: View {
             .frame(maxWidth: 760, alignment: .leading)
         }
         .navigationTitle(word.manchu)
+    }
+}
+
+private struct ManchuScriptCard: View {
+    let romanized: String
+
+    private var script: String {
+        ManchuTransliterator.script(from: romanized)
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(.regularMaterial)
+                Text(script)
+                    .font(.system(size: 54))
+                    .lineLimit(1)
+                    .fixedSize()
+                    .rotationEffect(.degrees(90))
+                    .textSelection(.enabled)
+                    .accessibilityLabel(romanized)
+            }
+            .frame(width: 104, height: 220)
+
+            Text("Manchu script")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 

@@ -31,3 +31,10 @@ import Testing
 
     #expect(DictionarySearch.matchingSentences(sentences, query: "LARGE").map(\.wordID) == [2])
 }
+
+@Test func manchuTransliteratorHandlesCommonMollendorffLetters() {
+    #expect(ManchuTransliterator.script(from: "a uju") == "\u{1820} \u{1824}\u{1835}\u{1824}")
+    #expect(ManchuTransliterator.script(from: "inenggi") == "\u{1873}\u{1828}\u{1821}\u{1829}\u{182D}\u{1873}")
+    #expect(ManchuTransliterator.script(from: "akū") == "\u{1820}\u{182C}\u{1826}")
+    #expect(ManchuTransliterator.script(from: "aš") == "\u{1820}\u{1831}")
+}
