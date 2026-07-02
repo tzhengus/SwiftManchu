@@ -179,10 +179,21 @@ private struct GlossedManchuText: View {
         HStack(spacing: 5) {
             ForEach(Array(text.split(separator: " ").enumerated()), id: \.offset) { _, token in
                 let value = String(token)
-                let word = wordsByManchu[value.normalizedManchuKey]
+                let word = lookup(value)
                 GlossedToken(value: value, word: word, font: font, tooltip: word.map(tooltip(for:)))
             }
         }
+    }
+
+    private func lookup(_ token: String) -> Word? {
+        let key = token.normalizedManchuKey
+        if let word = wordsByManchu[key] {
+            return word
+        }
+        if key.count > 3, key.hasSuffix("i") {
+            return wordsByManchu[String(key.dropLast())]
+        }
+        return nil
     }
 
     private func tooltip(for word: Word) -> String {
@@ -195,17 +206,53 @@ private struct GlossedToken: View {
     let word: Word?
     let font: Font
     let tooltip: String?
+    @State private var isHovering = false
 
     var body: some View {
-        let text = Text(value)
-            .font(font)
-            .textSelection(.enabled)
-
         if let tooltip {
-            text.help(tooltip)
+            Text(value)
+                .font(font)
+                .textSelection(.enabled)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 1)
+                .background(isHovering ? Color.accentColor.opacity(0.18) : Color.clear, in: RoundedRectangle(cornerRadius: 4))
+                .overlay(alignment: .topLeading) {
+                    if isHovering {
+                        GlossTooltip(word: word, tooltip: tooltip)
+                            .offset(y: -58)
+                            .zIndex(10)
+                    }
+                }
+                .onHover { isHovering = $0 }
+                .help(tooltip)
         } else {
-            text
+            Text(value)
+                .font(font)
+                .textSelection(.enabled)
         }
+    }
+}
+
+private struct GlossTooltip: View {
+    let word: Word?
+    let tooltip: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let word {
+                Text(word.manchu)
+                    .font(.headline)
+            }
+            Text(tooltip)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .frame(width: 260, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .shadow(radius: 8, y: 3)
     }
 }
 
