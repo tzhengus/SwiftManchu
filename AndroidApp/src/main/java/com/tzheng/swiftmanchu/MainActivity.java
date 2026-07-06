@@ -3,9 +3,12 @@ package com.tzheng.swiftmanchu;
 import android.app.Activity;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -31,7 +34,12 @@ public final class MainActivity extends Activity {
     private SQLiteDatabase database;
     private WordAdapter adapter;
     private TextView countText;
-    private TextView detailText;
+    private LinearLayout scriptColumns;
+    private TextView romanText;
+    private TextView chineseText;
+    private TextView englishText;
+    private TextView attributeText;
+    private TextView examplesText;
     private final List<Word> words = new ArrayList<Word>();
 
     @Override
@@ -40,12 +48,13 @@ public final class MainActivity extends Activity {
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(0xfffafafa);
+        root.setBackgroundColor(0xfff4f1ea);
         root.setFocusable(true);
         root.setFocusableInTouchMode(true);
-        root.setPadding(dp(12), dp(10), dp(12), dp(10));
+        root.setPadding(dp(10), dp(10), dp(10), dp(10));
 
-        TextView title = label("SwiftManchu", 22, 0xff202124);
+        TextView title = label("SwiftManchu", 24, 0xff2d2417);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         root.addView(title, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -54,33 +63,98 @@ public final class MainActivity extends Activity {
         search.setSingleLine(true);
         search.setHint("Search Manchu, Chinese, English");
         search.setTextSize(16);
+        search.setPadding(dp(12), 0, dp(12), 0);
+        search.setBackground(rounded(0xffffffff, 1, 0xffd7cabb, 8));
         root.addView(search, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        LinearLayout listPanel = panel();
         countText = label("", 13, 0xff5f6368);
-        root.addView(countText, new LinearLayout.LayoutParams(
+        countText.setPadding(dp(12), dp(8), dp(12), dp(4));
+        listPanel.addView(countText, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
         ListView listView = new ListView(this);
         listView.setDividerHeight(1);
+        listView.setCacheColorHint(0x00000000);
+        listView.setBackgroundColor(0xffffffff);
         adapter = new WordAdapter();
         listView.setAdapter(adapter);
-        root.addView(listView, new LinearLayout.LayoutParams(
+        listPanel.addView(listView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1f));
+        root.addView(listPanel, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
                 1f));
 
+        View separator = new View(this);
+        separator.setBackgroundColor(0xff9f7f43);
+        LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(3));
+        separatorParams.setMargins(0, dp(8), 0, dp(8));
+        root.addView(separator, separatorParams);
+
+        LinearLayout detailPanel = panel();
+        TextView detailLabel = label("Details", 14, 0xff7a5a22);
+        detailLabel.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        detailLabel.setPadding(dp(12), dp(10), dp(12), 0);
+        detailPanel.addView(detailLabel, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
         ScrollView detailScroll = new ScrollView(this);
-        detailText = label("Loading dictionary...", 16, 0xff202124);
-        detailText.setTextIsSelectable(true);
-        detailText.setPadding(0, dp(12), 0, 0);
-        detailScroll.addView(detailText);
-        root.addView(detailScroll, new LinearLayout.LayoutParams(
+        LinearLayout detailContent = new LinearLayout(this);
+        detailContent.setOrientation(LinearLayout.VERTICAL);
+        detailContent.setPadding(dp(12), dp(10), dp(12), dp(12));
+
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.HORIZONTAL);
+
+        scriptColumns = new LinearLayout(this);
+        scriptColumns.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        scriptColumns.setPadding(dp(10), dp(10), dp(10), dp(10));
+        scriptColumns.setBackground(rounded(0xfffbf7ed, 1, 0xffd7cabb, 8));
+        hero.addView(scriptColumns, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        LinearLayout facts = new LinearLayout(this);
+        facts.setOrientation(LinearLayout.VERTICAL);
+        facts.setPadding(dp(14), 0, 0, 0);
+        romanText = label("Loading dictionary...", 24, 0xff202124);
+        romanText.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        chineseText = label("", 21, 0xff202124);
+        englishText = label("", 18, 0xff3c4043);
+        attributeText = label("", 16, 0xff7a5a22);
+        facts.addView(romanText);
+        facts.addView(chineseText);
+        facts.addView(englishText);
+        facts.addView(attributeText);
+        hero.addView(facts, new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f));
+        detailContent.addView(hero);
+
+        examplesText = label("", 18, 0xff2f3437);
+        examplesText.setTextIsSelectable(true);
+        examplesText.setPadding(0, dp(14), 0, 0);
+        examplesText.setLineSpacing(0, 1.08f);
+        detailContent.addView(examplesText);
+        detailScroll.addView(detailContent);
+        detailPanel.addView(detailScroll, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
                 1f));
+        root.addView(detailPanel, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                0,
+                1.15f));
 
         setContentView(root);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -90,7 +164,7 @@ public final class MainActivity extends Activity {
             database = openDictionary();
             refresh("");
         } catch (IOException error) {
-            detailText.setText("Could not open dictionary:\n" + error.getMessage());
+            showMessage("Could not open dictionary", error.getMessage());
         }
 
         search.addTextChangedListener(new TextWatcher() {
@@ -187,28 +261,27 @@ public final class MainActivity extends Activity {
         adapter.notifyDataSetChanged();
         countText.setText(words.size() + " results");
         if (words.isEmpty()) {
-            detailText.setText("No matches.");
+            showMessage("No matches.", "");
         } else {
             showWord(words.get(0));
         }
     }
 
     private void showWord(Word word) {
-        StringBuilder text = new StringBuilder();
-        text.append(word.manchu).append('\n');
-        text.append(ManchuScript.fromRomanized(word.manchu)).append('\n');
-        text.append('\n').append(word.chinese).append('\n');
-        text.append(word.english).append('\n');
-        if (word.attribute.length() > 0) {
-            text.append(word.attribute).append('\n');
-        }
+        showVerticalScript(ManchuScript.fromRomanized(word.manchu));
+        romanText.setText(word.manchu);
+        chineseText.setText(word.chinese);
+        englishText.setText(word.english);
+        attributeText.setText(word.attribute);
+        attributeText.setVisibility(word.attribute.length() > 0 ? View.VISIBLE : View.GONE);
 
+        StringBuilder text = new StringBuilder();
         Cursor cursor = database.rawQuery(
                 "select sentmnc, sentchn, senteng from Sentence where wordid = ? order by sentid",
                 new String[] { String.valueOf(word.id) });
         try {
             if (cursor.getCount() > 0) {
-                text.append("\nExamples\n");
+                text.append("Examples\n");
                 while (cursor.moveToNext()) {
                     text.append("\n").append(cursor.getString(0)).append('\n');
                     text.append(cursor.getString(1)).append('\n');
@@ -218,7 +291,46 @@ public final class MainActivity extends Activity {
         } finally {
             cursor.close();
         }
-        detailText.setText(text.toString());
+        examplesText.setText(text.toString());
+    }
+
+    private void showMessage(String title, String body) {
+        scriptColumns.removeAllViews();
+        romanText.setText(title);
+        chineseText.setText(body);
+        englishText.setText("");
+        attributeText.setText("");
+        examplesText.setText("");
+    }
+
+    private void showVerticalScript(String script) {
+        scriptColumns.removeAllViews();
+        String[] columns = script.trim().split("\\s+");
+        if (columns.length == 0 || (columns.length == 1 && columns[0].length() == 0)) {
+            columns = new String[] { script };
+        }
+        for (String column : columns) {
+            TextView view = label(verticalize(column), 30, 0xff2d2417);
+            view.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            view.setLineSpacing(0, 0.92f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.setMargins(dp(4), 0, dp(4), 0);
+            scriptColumns.addView(view, params);
+        }
+    }
+
+    private String verticalize(String text) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < text.length(); ) {
+            int codePoint = text.codePointAt(i);
+            if (!Character.isWhitespace(codePoint)) {
+                result.appendCodePoint(codePoint).append('\n');
+            }
+            i += Character.charCount(codePoint);
+        }
+        return result.toString();
     }
 
     private TextView label(String text, int sp, int color) {
@@ -227,6 +339,21 @@ public final class MainActivity extends Activity {
         view.setTextSize(sp);
         view.setTextColor(color);
         return view;
+    }
+
+    private LinearLayout panel() {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setBackground(rounded(0xffffffff, 1, 0xffddd3c4, 8));
+        return panel;
+    }
+
+    private GradientDrawable rounded(int color, int strokeDp, int strokeColor, int radiusDp) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(color);
+        drawable.setCornerRadius(dp(radiusDp));
+        drawable.setStroke(dp(strokeDp), strokeColor);
+        return drawable;
     }
 
     private int dp(int value) {
@@ -244,9 +371,10 @@ public final class MainActivity extends Activity {
             if (convertView == null) {
                 LinearLayout row = new LinearLayout(MainActivity.this);
                 row.setOrientation(LinearLayout.VERTICAL);
-                row.setPadding(0, dp(8), 0, dp(8));
+                row.setPadding(dp(12), dp(9), dp(12), dp(9));
 
                 TextView head = label("", 18, 0xff202124);
+                head.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
                 TextView sub = label("", 14, 0xff5f6368);
                 row.addView(head);
                 row.addView(sub);
