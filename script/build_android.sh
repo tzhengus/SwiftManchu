@@ -35,7 +35,7 @@ mkdir -p "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/generated" "$BUILD_DI
     -o "$BUILD_DIR/base.apk"
 
 find "$APP_DIR/src/main/java" "$BUILD_DIR/generated" -name '*.java' | sort > "$BUILD_DIR/java-sources.txt"
-"$JAVAC" -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -d "$BUILD_DIR/classes" @"$BUILD_DIR/java-sources.txt"
+"$JAVAC" -encoding UTF-8 -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -d "$BUILD_DIR/classes" @"$BUILD_DIR/java-sources.txt"
 "$D8" --min-api 26 --output "$BUILD_DIR/dex" $(find "$BUILD_DIR/classes" -name '*.class' | sort)
 
 cp "$BUILD_DIR/base.apk" "$BUILD_DIR/unsigned.apk"
