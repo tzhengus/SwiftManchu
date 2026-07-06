@@ -30,3 +30,4 @@ DerivedData
 .build-module-cache/
 .swiftpm/
 dist/
+.gradle-home/
