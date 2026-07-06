@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -40,6 +41,8 @@ public final class MainActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(0xfffafafa);
+        root.setFocusable(true);
+        root.setFocusableInTouchMode(true);
         root.setPadding(dp(12), dp(10), dp(12), dp(10));
 
         TextView title = label("SwiftManchu", 22, 0xff202124);
@@ -80,6 +83,8 @@ public final class MainActivity extends Activity {
                 1f));
 
         setContentView(root);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        root.requestFocus();
 
         try {
             database = openDictionary();
