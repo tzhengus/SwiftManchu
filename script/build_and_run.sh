@@ -14,6 +14,7 @@ APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+APP_ICON="$ROOT_DIR/Sources/SwiftManchu/Resources/AppIcon.icns"
 
 export CLANG_MODULE_CACHE_PATH="$ROOT_DIR/.build-module-cache"
 
@@ -56,6 +57,7 @@ mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$DIRECT_BUILD/$APP_NAME" "$APP_BINARY"
 chmod +x "$APP_BINARY"
 cp Sources/SwiftManchu/Resources/ManchuDict.SQLite "$APP_RESOURCES/"
+cp "$APP_ICON" "$APP_RESOURCES/"
 
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -66,6 +68,8 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>
