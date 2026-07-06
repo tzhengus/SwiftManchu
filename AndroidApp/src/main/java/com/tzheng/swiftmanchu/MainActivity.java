@@ -133,7 +133,7 @@ public final class MainActivity extends Activity {
 
         scriptView = new RotatedScriptView();
         scriptView.setBackground(rounded(0xfffbf7ed, 1, 0xffd7cabb, 8));
-        hero.addView(scriptView, new LinearLayout.LayoutParams(dp(88), dp(178)));
+        hero.addView(scriptView, new LinearLayout.LayoutParams(dp(124), dp(198)));
 
         LinearLayout facts = new LinearLayout(this);
         facts.setOrientation(LinearLayout.VERTICAL);
@@ -344,6 +344,7 @@ public final class MainActivity extends Activity {
 
     private final class RotatedScriptView extends View {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        private final List<String> lines = new ArrayList<String>();
         private String script = "";
 
         RotatedScriptView() {
@@ -351,7 +352,6 @@ public final class MainActivity extends Activity {
             paint.setColor(0xff2d2417);
             paint.setTextAlign(Paint.Align.CENTER);
             paint.setTextLocale(Locale.forLanguageTag("mn-Mong"));
-            paint.setTextSize(dp(44));
         }
 
         void setScript(String script) {
@@ -365,12 +365,67 @@ public final class MainActivity extends Activity {
             if (script.length() == 0) {
                 return;
             }
+            float padding = dp(12);
+            float maxLineLength = Math.max(1, getHeight() - padding * 2);
+            float maxColumnsWidth = Math.max(1, getWidth() - padding * 2);
+            float textSize = dp(42);
+            float minTextSize = dp(22);
+            float lineHeight;
+
+            do {
+                paint.setTextSize(textSize);
+                wrapLines(maxLineLength);
+                lineHeight = (paint.descent() - paint.ascent()) * 1.06f;
+                if (widestLine() <= maxLineLength && lines.size() * lineHeight <= maxColumnsWidth) {
+                    break;
+                }
+                textSize -= dp(2);
+            } while (textSize >= minTextSize);
+
+            paint.setTextSize(Math.max(textSize, minTextSize));
+            wrapLines(maxLineLength);
+            lineHeight = (paint.descent() - paint.ascent()) * 1.06f;
+            // ponytail: rotated word columns preserve joins; replace with native vertical shaping if Android exposes it reliably.
             canvas.save();
             canvas.translate(getWidth() / 2f, getHeight() / 2f);
             canvas.rotate(90);
             Paint.FontMetrics metrics = paint.getFontMetrics();
-            canvas.drawText(script, 0, -(metrics.ascent + metrics.descent) / 2f, paint);
+            float totalHeight = (lines.size() - 1) * lineHeight;
+            for (int i = 0; i < lines.size(); i++) {
+                float lineCenter = totalHeight / 2f - i * lineHeight;
+                float baseline = lineCenter - (metrics.ascent + metrics.descent) / 2f;
+                canvas.drawText(lines.get(i), 0, baseline, paint);
+            }
             canvas.restore();
+        }
+
+        private void wrapLines(float maxLineLength) {
+            lines.clear();
+            String[] words = script.split("\\s+");
+            String current = "";
+            for (String word : words) {
+                if (word.length() == 0) {
+                    continue;
+                }
+                String candidate = current.length() == 0 ? word : current + " " + word;
+                if (current.length() > 0 && paint.measureText(candidate) > maxLineLength) {
+                    lines.add(current);
+                    current = word;
+                } else {
+                    current = candidate;
+                }
+            }
+            if (current.length() > 0) {
+                lines.add(current);
+            }
+        }
+
+        private float widestLine() {
+            float widest = 0;
+            for (String line : lines) {
+                widest = Math.max(widest, paint.measureText(line));
+            }
+            return widest;
         }
     }
 
