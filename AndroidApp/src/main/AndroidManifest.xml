@@ -7,7 +7,9 @@
 
     <application
         android:allowBackup="false"
+        android:icon="@drawable/app_icon"
         android:label="SwiftManchu"
+        android:roundIcon="@drawable/app_icon"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity

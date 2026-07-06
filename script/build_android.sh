@@ -23,8 +23,10 @@ for tool in "$AAPT2" "$D8" "$ZIPALIGN" "$APKSIGNER" "$JAVAC" "$KEYTOOL" "$ANDROI
     [ -e "$tool" ] || { echo "missing: $tool" >&2; exit 1; }
 done
 
-rm -rf "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/generated"
+rm -rf "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/generated" "$BUILD_DIR/res.zip"
 mkdir -p "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/generated" "$BUILD_DIR/outputs/apk/debug"
+
+"$AAPT2" compile --dir "$APP_DIR/src/main/res" -o "$BUILD_DIR/res.zip"
 
 "$AAPT2" link \
     --manifest "$APP_DIR/src/main/AndroidManifest.xml" \
@@ -32,6 +34,7 @@ mkdir -p "$BUILD_DIR/classes" "$BUILD_DIR/dex" "$BUILD_DIR/generated" "$BUILD_DI
     --java "$BUILD_DIR/generated" \
     --min-sdk-version 26 \
     --target-sdk-version 34 \
+    "$BUILD_DIR/res.zip" \
     -o "$BUILD_DIR/base.apk"
 
 find "$APP_DIR/src/main/java" "$BUILD_DIR/generated" -name '*.java' | sort > "$BUILD_DIR/java-sources.txt"

@@ -3,6 +3,8 @@ package com.tzheng.swiftmanchu;
 import android.app.Activity;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -34,7 +37,7 @@ public final class MainActivity extends Activity {
     private SQLiteDatabase database;
     private WordAdapter adapter;
     private TextView countText;
-    private LinearLayout scriptColumns;
+    private RotatedScriptView scriptView;
     private TextView romanText;
     private TextView chineseText;
     private TextView englishText;
@@ -53,9 +56,22 @@ public final class MainActivity extends Activity {
         root.setFocusableInTouchMode(true);
         root.setPadding(dp(10), dp(10), dp(10), dp(10));
 
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.app_icon);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(42), dp(42));
+        iconParams.setMargins(0, 0, dp(10), 0);
+        header.addView(icon, iconParams);
+
         TextView title = label("SwiftManchu", 24, 0xff2d2417);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        root.addView(title, new LinearLayout.LayoutParams(
+        header.addView(title, new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                1f));
+        root.addView(header, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -115,13 +131,9 @@ public final class MainActivity extends Activity {
         LinearLayout hero = new LinearLayout(this);
         hero.setOrientation(LinearLayout.HORIZONTAL);
 
-        scriptColumns = new LinearLayout(this);
-        scriptColumns.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-        scriptColumns.setPadding(dp(10), dp(10), dp(10), dp(10));
-        scriptColumns.setBackground(rounded(0xfffbf7ed, 1, 0xffd7cabb, 8));
-        hero.addView(scriptColumns, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
+        scriptView = new RotatedScriptView();
+        scriptView.setBackground(rounded(0xfffbf7ed, 1, 0xffd7cabb, 8));
+        hero.addView(scriptView, new LinearLayout.LayoutParams(dp(88), dp(178)));
 
         LinearLayout facts = new LinearLayout(this);
         facts.setOrientation(LinearLayout.VERTICAL);
@@ -268,7 +280,7 @@ public final class MainActivity extends Activity {
     }
 
     private void showWord(Word word) {
-        showVerticalScript(ManchuScript.fromRomanized(word.manchu));
+        scriptView.setScript(ManchuScript.fromRomanized(word.manchu));
         romanText.setText(word.manchu);
         chineseText.setText(word.chinese);
         englishText.setText(word.english);
@@ -295,42 +307,12 @@ public final class MainActivity extends Activity {
     }
 
     private void showMessage(String title, String body) {
-        scriptColumns.removeAllViews();
+        scriptView.setScript("");
         romanText.setText(title);
         chineseText.setText(body);
         englishText.setText("");
         attributeText.setText("");
         examplesText.setText("");
-    }
-
-    private void showVerticalScript(String script) {
-        scriptColumns.removeAllViews();
-        String[] columns = script.trim().split("\\s+");
-        if (columns.length == 0 || (columns.length == 1 && columns[0].length() == 0)) {
-            columns = new String[] { script };
-        }
-        for (String column : columns) {
-            TextView view = label(verticalize(column), 30, 0xff2d2417);
-            view.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            view.setLineSpacing(0, 0.92f);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            params.setMargins(dp(4), 0, dp(4), 0);
-            scriptColumns.addView(view, params);
-        }
-    }
-
-    private String verticalize(String text) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < text.length(); ) {
-            int codePoint = text.codePointAt(i);
-            if (!Character.isWhitespace(codePoint)) {
-                result.appendCodePoint(codePoint).append('\n');
-            }
-            i += Character.charCount(codePoint);
-        }
-        return result.toString();
     }
 
     private TextView label(String text, int sp, int color) {
@@ -358,6 +340,38 @@ public final class MainActivity extends Activity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    private final class RotatedScriptView extends View {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        private String script = "";
+
+        RotatedScriptView() {
+            super(MainActivity.this);
+            paint.setColor(0xff2d2417);
+            paint.setTextAlign(Paint.Align.CENTER);
+            paint.setTextLocale(Locale.forLanguageTag("mn-Mong"));
+            paint.setTextSize(dp(44));
+        }
+
+        void setScript(String script) {
+            this.script = script == null ? "" : script.trim();
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            if (script.length() == 0) {
+                return;
+            }
+            canvas.save();
+            canvas.translate(getWidth() / 2f, getHeight() / 2f);
+            canvas.rotate(90);
+            Paint.FontMetrics metrics = paint.getFontMetrics();
+            canvas.drawText(script, 0, -(metrics.ascent + metrics.descent) / 2f, paint);
+            canvas.restore();
+        }
     }
 
     private final class WordAdapter extends BaseAdapter {
